@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Pay Now | Ghumloo</title>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+
+<h2>Complete Your Payment</h2>
+<button id="payBtn">Pay Now</button>
+
+<script>
+var options = {
+  key: "rzp_test_Sc2PRbJwd0Eq46",
+  order_id: "{{ order_id }}",
+  amount: {{ amount }},
+  currency: "INR",
+  name: "Ghumloo Deals",
+  handler: function (response) {
+    alert("Payment Successful!");
+  }
+};
+
+document.getElementById("payBtn").onclick = function () {
+  new Razorpay(options).open();
+};
+</script>
+
+</body>
+</html>
