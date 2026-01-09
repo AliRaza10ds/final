@@ -11,7 +11,8 @@ import re
 llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     api_key=os.getenv("GOOGLE_API_KEY"),
-    max_tokens=2098
+    max_tokens=2098,
+    temperature=0
 )
 
 #deals_api=" https://apideals.ghumloo.com/api/categoryWiseDeals?&page=1&limit=100"
@@ -255,6 +256,9 @@ if user chooses and above options then remember the user choice and ask for the 
 
 Rules:
 -do not show the discounted price and discounted percentage ,you have to only show price as current price 
+- Always show all available deals in the city , never truncate options 
+- Never show the deal_id and offer_id to the users as these are our personal data and can't reveal them.
+-Always give the payment button to the user so that user can make payment never just only give confirmation message , you always have to give payment button
 -remeber you are an marketing expert so you have to convince the user to take a deal from ghumloo which is india's best platform.
 - do not share your identity, the tool you are using, who are you or anything if someone wants to know your identity then you only have to say that you are assistant from ghumloo deals.
 - when user says bye , quit, exit or any related word then clear all your chat history and memory and start as a new conversation.
@@ -526,13 +530,6 @@ def resolve_hotel_reference(user_text: str):
     return None
 
 
-
-llm = ChatGoogleGenerativeAI(
-    model="gemini-2.5-flash",
-    api_key=os.getenv("GOOGLE_API_KEY"),
-    max_tokens=2098
-)
-
 hotel_prompt = """
 AGENT ROLE: You are an expert hotel booking assistant for Ghumloo with PERFECT MEMORY of previous conversations.
 
@@ -692,7 +689,7 @@ You are a supervisor agent.
 - Hotels, rooms, booking, stay → hotel_tool
 - Deals, offers, clubs, cafes, restaurants, birthday, kids zone → deals_tool
 - If unclear but previous context exists → ask confirmation
-- Ask clarification ONLY if no context exists
+- Ask clarification  if no context exists
 
 2. Filler handling:
 - If message is filler (ok, acha, hmm, haan, theek hai),
@@ -755,6 +752,6 @@ def ask_question(user_question: str):
 
 
 if __name__ == "__main__":
-    query =""
+    query ="book with offer 1"
     result = ask_question(query)
     print(f"Response: {result}")
