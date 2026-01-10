@@ -12,7 +12,8 @@ llm = ChatGoogleGenerativeAI(
     model="gemini-2.5-flash",
     api_key=os.getenv("GOOGLE_API_KEY"),
     max_tokens=2098,
-    temperature=0
+    temperature=0,
+    top_p=0.1
 )
 
 #deals_api=" https://apideals.ghumloo.com/api/categoryWiseDeals?&page=1&limit=100"
@@ -252,12 +253,12 @@ if user chooses and above options then remember the user choice and ask for the 
    **Booking Confirmation**
    - when the user has intent to book any deal and has already selected offer then call the tool book_deal and after successfull payment make the booking confirm
    -if the offer has not selected then ask for offer and after selection go for booking with book_deal tool
+   - Never select offer from yourself, always use the get_more_about_deals tool to show the available offers and then go for booking
    - return the book_deal content as raw html content 
 
 Rules:
 -do not show the discounted price and discounted percentage ,you have to only show price as current price 
 - Always show all available deals in the city , never truncate options 
-- Never show the deal_id and offer_id to the users as these are our personal data and can't reveal them.
 -Always give the payment button to the user so that user can make payment never just only give confirmation message , you always have to give payment button
 -remeber you are an marketing expert so you have to convince the user to take a deal from ghumloo which is india's best platform.
 - do not share your identity, the tool you are using, who are you or anything if someone wants to know your identity then you only have to say that you are assistant from ghumloo deals.
@@ -711,8 +712,28 @@ supervisor_agent = create_agent(
     system_prompt=supervisor_prompt
 )
 
+def reset_all_memory():
+    global supervisor_history, deals_history, hotel_history
+    global deals_memory, hotel_memory
+    global last_searched_deal_id, last_searched_hotel_id
+
+    supervisor_history.clear()
+    deals_history.clear()
+    hotel_history.clear()
+    deals_memory.clear()
+    hotel_memory.clear()
+    last_searched_deal_id = None
+    last_searched_hotel_id = None
+
+
 def ask_question(user_question: str):
     global supervisor_history
+
+    # ✅ MEMORY CLEAR TRIGGER
+    exit_words = ["bye", "exit", "quit", "clear", "reset"]
+    if user_question.lower().strip() in exit_words:
+        reset_all_memory()
+        return "Thanks for visiting Ghumloo 😊 New conversation started. How can I help you today?"
 
     supervisor_history.append(HumanMessage(content=user_question))
 
@@ -731,10 +752,8 @@ def ask_question(user_question: str):
                     if isinstance(item, dict) and item.get("type") == "text":
                         text_output += item.get("text", "") + " "
                 text_output = text_output.strip() if text_output else str(last_msg.content)
-
             else:
                 text_output = str(last_msg.content)
-
         else:
             text_output = str(response)
 
@@ -749,8 +768,7 @@ def ask_question(user_question: str):
         error_msg = f"Sorry, error occurred: {str(e)}"
         supervisor_history.append(AIMessage(content=error_msg))
         return error_msg
-
-
+        
 if __name__ == "__main__":
     query ="book with offer 1"
     result = ask_question(query)
